@@ -641,6 +641,7 @@ FS_blob.prototype.file_create = function (container_name,filename,create_options
 
 FS_blob.prototype.file_create_meta = function (container_name, filename, temp_path, opt,callback,fb,is_copy)
 {
+  console.log("debug:"+(new Date())+" - proto.file_create_meta 1'");
   var resp = {};
   var resp_code, resp_header, resp_body;
   resp_code = resp_header = resp_body = null;
@@ -722,6 +723,7 @@ FS_blob.prototype.file_create_meta = function (container_name, filename, temp_pa
 
 FS_blob.prototype.file_delete_meta = function (container_name, filename, callback, fb)
 {
+  console.log("debug:"+(new Date())+" - proto.file_delete_meta 1'");
   var resp_code, resp_header, resp_body;
   resp_code = resp_header = resp_body = null;
   var c_path = fb.root_path + "/" + container_name;
@@ -756,6 +758,7 @@ FS_blob.prototype.file_delete_meta = function (container_name, filename, callbac
 
 FS_blob.prototype.file_copy = function (container_name,filename,source_container,source_file,options, metadata, callback,fb, retry_cnt)
 {
+  console.log("debug:"+(new Date())+" - file_copy 1'");
   var resp = {};
 //step 1 check container existence
   var c_path = this.root_path + "/" + container_name;
@@ -911,6 +914,7 @@ FS_blob.prototype.file_copy = function (container_name,filename,source_container
 
 FS_blob.prototype.file_read = function (container_name, filename, options, callback, fb, retry_cnt)
 {
+  console.log("debug:"+(new Date())+" - file_read 1'");
   var range = options.range;
   var verb = options.method;
   var resp = {}; //for error_msg
@@ -1061,6 +1065,7 @@ FS_blob.prototype.file_read = function (container_name, filename, options, callb
 
 function query_files(container_name, options, callback, fb)
 {
+  console.log("debug:"+(new Date())+" - query_files() 1. container=" + container_name);
   var keys = null;
   keys = enum_cache[container_name].keys;
   if (!keys) {
@@ -1084,6 +1089,7 @@ function query_files(container_name, options, callback, fb)
   }
   var idx2 = keys.length;
   if (options.prefix) { //end of prefix range
+    console.log("debug:"+(new Date())+" - query_files() 2. container=" + container_name);
     var st2 = options.prefix;
     st2 = st2.substr(0,st2.length-1)+String.fromCharCode(st2.charCodeAt(st2.length-1)+1);
     low = idx; high = keys.length-1;
@@ -1126,6 +1132,7 @@ function query_files(container_name, options, callback, fb)
       }
     }
     i++;
+    console.log("debug:"+(new Date())+" - query_files() 3. container=" + container_name);
     var doc = enum_cache[container_name].tbl[key];
     res_contents.push({"Key":key, "LastModified":new Date(doc.lastmodified).toISOString(), "ETag":'"'+doc.etag+'"', "Size":doc.size, "Owner":{}, "StorageClass":"STANDARD"});
   }
@@ -1141,6 +1148,7 @@ function query_files(container_name, options, callback, fb)
 
 FS_blob.prototype.file_list = function(container_name, options, callback, fb)
 {
+  console.log("debug:"+(new Date())+" - file_list() BEGIN. container=" + container_name);
   if (options.delimiter && options.delimiter.length > 1) {
     var resp = {};
     error_msg(400,"InvalidArgument","Delimiter should be a single character",resp);
@@ -1151,10 +1159,12 @@ FS_blob.prototype.file_list = function(container_name, options, callback, fb)
   if (container_exists(container_name,callback,this) === false) return;
   var now = new Date().valueOf();
   if (!enum_cache[container_name] || !enum_expire[container_name] || enum_expire[container_name] < now) {
+    console.log("debug:"+(new Date())+" - file_list() refreshing enum_cache. container=" + container_name);
     enum_cache[container_name] = null;
     try {
       enum_cache[container_name] = {tbl:JSON.parse(fs.readFileSync(fb.root_path+"/"+container_name+"/"+ENUM_FOLDER+"/base"))};
-      enum_expire[container_name] = now + 1000 * 5;
+      //enum_expire[container_name] = now + 1000 * 5;
+      enum_expire[container_name] = now;
       query_files(container_name, options,callback,fb);
     } catch (e) {
       var resp = {};
@@ -1171,6 +1181,7 @@ FS_blob.prototype.container_list = function()
 
 function render_containers(dirs,callback,fb)
 {
+  console.log("debug:"+(new Date())+" - render_containers");
   var resp_code, resp_header, resp_body;
   resp_code = resp_header = resp_body = null;
   var dates = new Array(dirs.length);
